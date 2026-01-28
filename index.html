@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistem Undian BCR</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px }
+        section { background:#fff; padding:15px; margin-bottom:20px; border-radius:6px }
+        button { padding:6px 12px; margin-right:5px; cursor:pointer }
+        button.danger { background:#dc3545; color:#fff; border:none }
+        ul { border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto }
+        table { width:100%; border-collapse:collapse }
+        th,td { border:1px solid #ccc; padding:6px }
+        hr { margin:30px 0 }
+    </style>
+</head>
+<body>
+
+<h1>Sistem Undian BCR</h1>
+
+<h2>US-02 | Input Peserta</h2>
+<section>
+    <input type="file" id="filePeserta" accept=".xlsx">
+    <button onclick="uploadPeserta()">Upload Peserta</button>
+    <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
+    <p>Total Peserta: <b><span id="totalPeserta">0</span></b></p>
+    <ul id="listPeserta"></ul>
+</section>
+
+<hr>
+
+<h2>US-03 | Input Hadiah</h2>
+<section>
+    <input type="file" id="fileHadiah" accept=".xlsx">
+    <button onclick="uploadHadiah()">Upload Hadiah</button>
+    <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
+    <p>Total Hadiah: <b><span id="totalHadiah">0</span></b></p>
+    <table>
+        <thead><tr><th>No</th><th>Hadiah</th><th>Stock</th></tr></thead>
+        <tbody id="listHadiah"></tbody>
+    </table>
+</section>
+
+<hr>
+
+<h2>US-04 | Proses Undian</h2>
+<section>
+    <select id="selectHadiah" onchange="onHadiahChange()"></select><br><br>
+    <input type="number" id="jumlahPemenang" value="1" min="1" disabled><br><br>
+    <button onclick="undi()">Undi</button>
+</section>
+
+<hr>
+
+<h2>US-05 | Verifikasi Pemenang</h2>
+<section>
+    <table>
+        <thead>
+            <tr><th>BIB</th><th>Nama</th><th>Hadiah</th><th>Status</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tabelKandidat"></tbody>
+    </table>
+    <br>
+    <button onclick="approveAll()">Sahkan Semua</button>
+    <button class="danger" onclick="resetUndian()">Reset Hasil Undian</button>
+</section>
+
+<hr>
+
+<h2>US-06 | Laporan Pemenang</h2>
+<section>
+    <button onclick="exportCSV()">Export CSV</button>
+    <table>
+        <thead><tr><th>BIB</th><th>Nama</th><th>Hadiah</th></tr></thead>
+        <tbody id="tabelLaporan"></tbody>
+    </table>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
