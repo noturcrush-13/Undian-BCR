@@ -77,22 +77,40 @@
             <tbody id="tabelKandidat"></tbody>
         </table>
         <div class="action-bar">
-            <button onclick="approveAll()">Sahkan Semua</button>
-            <button class="danger" onclick="resetUndian()">Reset Undian</button>
+            <button class="btn-action-lg approve-all" onclick="approveAll()">
+                Sahkan Semua
+            </button>
+            <button class="btn-action-lg reset-all" onclick="resetUndian()">
+                Reset Undian
+            </button>
         </div>
     </section>
 
     <!-- LAPORAN -->
     <section class="card">
         <h2>Laporan Pemenang</h2>
-        <button onclick="exportCSV()">Export CSV</button>
-        <button onclick="exportPDF()">Export PDF</button>
+        <div class="filter-bar">
+            <select id="filterHadiah" onchange="renderAll()">
+                <option value="">Semua Hadiah</option>
+            </select>
+
+            <input
+                type="text"
+                id="searchBib"
+                placeholder="Cari No BIB..."
+                oninput="renderAll()"
+            />
+        </div>
         <table>
             <thead>
                 <tr><th>BIB</th><th>Nama</th><th>Hadiah</th></tr>
             </thead>
             <tbody id="tabelLaporan"></tbody>
         </table>
+        <div class="export-actions">
+            <button class="btn-export csv" onclick="exportCSV()">Export CSV</button>
+            <button class="btn-export pdf" onclick="exportPDF()">Export PDF</button>
+        </div>
     </section>
 
 </div>

@@ -59,13 +59,13 @@ worker.onmessage = (e) => {
                 display?.classList.remove("running");
 
                 requestAnimationFrame(() => {
-                    gachaNumber.innerText = kandidatBaru[0].bib;
+                    gachaNumber.innerText = `${kandidatBaru[0].bib} - ${kandidatBaru[0].nama}`;
 
                     peserta = newPeserta;
                     kandidat.push(kandidatBaru[0]);
                     saveAll();
 
-                    enableUndiButton(); // optional helper
+                    enableUndiButton(); // optional helper  
                 });
                 return;
             }
@@ -321,8 +321,10 @@ function renderStatusHadiah() {
 }
 
 function renderAll() {
+    /* ================= TOTAL PESERTA ================= */
     totalPeserta.innerText = peserta.length;
 
+    /* ================= SELECT HADIAH UNDI ================= */
     selectHadiah.innerHTML = "";
     hadiah.forEach((h, i) => {
         if (h.stock > 0) {
@@ -331,39 +333,64 @@ function renderAll() {
         }
     });
 
+    /* ================= FILTER VALUE ================= */
+    const filterPrize =
+        document.getElementById("filterHadiah")?.value || "";
+
+    const searchBib =
+        document.getElementById("searchBib")?.value
+            ?.trim()
+            .toLowerCase() || "";
+
+    /* ================= VERIFIKASI (PENDING ONLY) ================= */
     tabelKandidat.innerHTML = "";
-    kandidat.forEach((k, i) => {
-        let aksi = "-";
 
-        if (k.status === "PENDING") {
-            aksi = `
-                <button onclick="approve(${i})">Approve</button>
-                <button class="danger" onclick="reject(${i})">Reject</button>
-            `;
-        }
-
-        tabelKandidat.innerHTML +=
-            `<tr>
-                <td>${k.bib}</td>
-                <td>${k.nama}</td>
-                <td>${k.prize}</td>
-                <td>${k.status}</td>
-                <td>${aksi}</td>
-            </tr>`;
-    });
-
-
-    tabelLaporan.innerHTML = "";
     kandidat
-        .filter(k => k.status === "APPROVED")
-        .forEach(k => {
-            tabelLaporan.innerHTML +=
-                `<tr>
+        .filter(k => k.status === "PENDING") // ⬅️ KUNCI UTAMA
+        .forEach((k, i) => {
+            const aksi = `
+                <div class="action-buttons">
+                    <button class="btn-action approve" onclick="approve(${i})">
+                        Approve
+                    </button>
+                    <button class="btn-action reject" onclick="reject(${i})">
+                        Reject
+                    </button>
+                </div>
+            `;
+            tabelKandidat.innerHTML += `
+                <tr>
                     <td>${k.bib}</td>
                     <td>${k.nama}</td>
                     <td>${k.prize}</td>
+                    <td>${k.status}</td>
+                    <td>${aksi}</td>
                 </tr>`;
         });
+
+    /* ================= LAPORAN PEMENANG ================= */
+    tabelLaporan.innerHTML = "";
+
+    kandidat
+        .filter(k => k.status === "APPROVED")
+        .filter(k => {
+            if (filterPrize && k.prize !== filterPrize) return false;
+            if (
+                searchBib &&
+                !String(k.bib).toLowerCase().includes(searchBib)
+            ) return false;
+            return true;
+        })
+        .forEach(k => {
+            tabelLaporan.innerHTML += `
+                <tr>
+                    <td>${k.bib}</td>
+                    <td>${k.nama}</td>
+                    <td class="text-green">${k.prize}</td>
+                </tr>`;
+        });
+
+    renderFilterHadiah();   // ⛔ aman karena dijaga
     renderStatusHadiah();
 }
 
@@ -484,6 +511,7 @@ function saveAll() {
     save("kandidat", kandidat);
 
     renderAll(); // ✅ SATU-SATUNYA RENDER
+    renderFilterHadiah();
 }
 
 /* ======================================================
@@ -594,3 +622,22 @@ function enableUndiButton() {
     btnUndi.disabled = false;
     btnUndi.innerText = "UNDI SEKARANG";
 }
+
+/* ======================================================
+   Config Search & Filter Pemenang
+====================================================== */
+function renderFilterHadiah() {
+    const select = document.getElementById("filterHadiah");
+    if (!select || select.options.length > 1) return; // ⛔ penting
+
+    const prizes = [...new Set(kandidat.map(k => k.prize))];
+
+    prizes.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.innerText = p;
+        select.appendChild(opt);
+    });
+}
+
+
