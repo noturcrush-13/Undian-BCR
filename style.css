@@ -1,49 +1,224 @@
+/* ================= BRAND VARIABLES ================= */
+:root {
+    --bg-main: #f8faf9;
+    --bg-card: #ffffff;
+
+    --green-primary: #22c55e;
+    --green-soft: #86efac;
+    --green-dark: #166534;
+
+    --text-main: #0f172a;
+    --text-muted: #475569;
+
+    --border: #e5e7eb;
+    --danger: #ef4444;
+}
+
+/* ================= GLOBAL ================= */
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    padding: 25px;
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(
+        180deg,
+        #ecfdf5,
+        var(--bg-main)
+    );
+    color: var(--text-main);
 }
 
-h1 {
-    margin-bottom: 10px;
+/* ================= HEADER ================= */
+header {
+    text-align: center;
+    padding: 40px 20px 50px;
 }
 
-section {
-    background: #fff;
-    padding: 15px;
-    border-radius: 6px;
-    margin-bottom: 20px;
+header h1 {
+    margin: 0;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--green-primary);
 }
 
+header p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ================= LAYOUT ================= */
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* ================= FORM ================= */
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--green-primary);
+}
+
+/* ================= BUTTON ================= */
 button {
-    padding: 6px 12px;
-    margin-right: 5px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: none;
     cursor: pointer;
+    font-weight: 600;
+}
+
+button.primary {
+    background: linear-gradient(
+        90deg,
+        var(--green-primary),
+        var(--green-dark)
+    );
+    color: white;
+    font-size: 18px;
+    padding: 14px;
+    box-shadow: 0 10px 25px rgba(34,197,94,.4);
+    transition: transform .15s, filter .15s;
+}
+
+button.primary:hover {
+    transform: scale(1.03);
+    filter: brightness(1.05);
 }
 
 button.danger {
-    background: #dc3545;
-    color: #fff;
-    border: none;
+    background: var(--danger);
+    color: white;
 }
 
-ul {
-    max-height: 180px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    padding: 10px;
+/* ================= GACHA ================= */
+.gacha {
+    text-align: center;
 }
 
+.gacha-display {
+    background: #ffffff;
+    border-radius: 26px;
+    padding: 50px 20px;
+    margin: 25px 0;
+    font-size: 72px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--green-primary);
+
+    border: 3px solid var(--green-primary);
+    box-shadow: 0 15px 35px rgba(34,197,94,.35);
+}
+
+.gacha-display.running::after {
+    content: "SEDANG MENGUNDI…";
+    display: block;
+    margin-top: 14px;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--green-dark);
+}
+
+/* ================= TABLE ================= */
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
-table, th, td {
-    border: 1px solid #ccc;
+th {
+    padding: 14px;
+    text-align: center;
+    font-weight: 800;
+    color: var(--green-dark);
+    border-bottom: 2px solid var(--green-soft);
 }
 
-th, td {
-    padding: 6px;
-    text-align: left;
+td {
+    padding: 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+tbody tr:hover {
+    background: #f0fdf4;
+}
+
+table td:last-child {
+    font-weight: 900;
+    color: var(--green-primary);
+}
+
+/* ================= BULK RESULT ================= */
+.gacha-result-list {
+    margin-top: 30px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+.bib-item {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px 10px;
+    border: 2px solid var(--green-soft);
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    transition: transform .2s;
+}
+
+.bib-item:hover {
+    transform: translateY(-3px) scale(1.03);
+}
+
+.bib-item .bib {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--green-primary);
+}
+
+.bib-item .nama {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
 }

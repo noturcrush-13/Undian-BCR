@@ -1,82 +1,105 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Sistem Undian BCR</title>
-    <style>
-        body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px }
-        section { background:#fff; padding:15px; margin-bottom:20px; border-radius:6px }
-        button { padding:6px 12px; margin-right:5px; cursor:pointer }
-        button.danger { background:#dc3545; color:#fff; border:none }
-        ul { border:1px solid #ccc; padding:10px; max-height:200px; overflow:auto }
-        table { width:100%; border-collapse:collapse }
-        th,td { border:1px solid #ccc; padding:6px }
-        hr { margin:30px 0 }
-    </style>
+<meta charset="UTF-8">
+<title>BCR Lucky Draw</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Sistem Undian BCR</h1>
+<header>
+    <h1>🎰 BCR Lucky Draw</h1>
+    <p>Event Lucky Draw System</p>
+</header>
 
-<h2>US-02 | Input Peserta</h2>
-<section>
-    <input type="file" id="filePeserta" accept=".xlsx">
-    <button onclick="uploadPeserta()">Upload Peserta</button>
-    <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
-    <p>Total Peserta: <b><span id="totalPeserta">0</span></b></p>
-    <ul id="listPeserta"></ul>
-</section>
+<div class="container">
 
-<hr>
+    <!-- SETUP -->
+    <section class="card">
+        <h2>Setup Data</h2>
+        <div class="grid-2">
+            <div>
+                <label>Upload Peserta (Excel)</label>
+                <input type="file" id="filePeserta" accept=".xlsx">
+                <button onclick="uploadPeserta()">Upload Peserta</button>
+                <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
+                <p>Total Peserta: <b id="totalPeserta">0</b></p>
+            </div>
+            <div>
+                <label>Upload Hadiah (Excel)</label>
+                <input type="file" id="fileHadiah" accept=".xlsx">
+                <button onclick="uploadHadiah()">Upload Hadiah</button>
+                <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
+            </div>
+        </div>
+    </section>
 
-<h2>US-03 | Input Hadiah</h2>
-<section>
-    <input type="file" id="fileHadiah" accept=".xlsx">
-    <button onclick="uploadHadiah()">Upload Hadiah</button>
-    <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
-    <p>Total Hadiah: <b><span id="totalHadiah">0</span></b></p>
-    <table>
-        <thead><tr><th>No</th><th>Hadiah</th><th>Stock</th></tr></thead>
-        <tbody id="listHadiah"></tbody>
-    </table>
-</section>
+    <!-- ================= STATUS HADIAH ================= -->
+    <section class="card">
+        <h2>🎁 Status Hadiah</h2>
 
-<hr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Hadiah</th>
+                    <th>Jumlah Tersedia</th>
+                </tr>
+            </thead>
+            <tbody id="tabelStatusHadiah"></tbody>
+        </table>
+    </section>
 
-<h2>US-04 | Proses Undian</h2>
-<section>
-    <select id="selectHadiah" onchange="onHadiahChange()"></select><br><br>
-    <input type="number" id="jumlahPemenang" value="1" min="1" disabled><br><br>
-    <button onclick="undi()">Undi</button>
-</section>
 
-<hr>
+    <!-- GACHA -->
+    <section class="card gacha">
+        <h2 id="currentPrize">🎁 Hadiah</h2>
 
-<h2>US-05 | Verifikasi Pemenang</h2>
-<section>
-    <table>
-        <thead>
-            <tr><th>BIB</th><th>Nama</th><th>Hadiah</th><th>Status</th><th>Aksi</th></tr>
-        </thead>
-        <tbody id="tabelKandidat"></tbody>
-    </table>
-    <br>
-    <button onclick="approveAll()">Sahkan Semua</button>
-    <button class="danger" onclick="resetUndian()">Reset Hasil Undian</button>
-</section>
+        <select id="selectHadiah" onchange="onHadiahChange()"></select>
+        <input type="number" id="jumlahPemenang" value="1" min="1">
 
-<hr>
+        <div class="gacha-display">
+            <span id="gachaNumber">-----</span>
+        </div>
+        <div class="gacha-result-list" id="gachaResultList"></div>
 
-<h2>US-06 | Laporan Pemenang</h2>
-<section>
-    <button onclick="exportCSV()">Export CSV</button>
-    <table>
-        <thead><tr><th>BIB</th><th>Nama</th><th>Hadiah</th></tr></thead>
-        <tbody id="tabelLaporan"></tbody>
-    </table>
-</section>
+        <button class="primary" id="btnUndi" onclick="startUndian()">UNDI SEKARANG</button>
+    </section>
+
+    <!-- VERIFIKASI -->
+    <section class="card">
+        <h2>Verifikasi Pemenang</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>BIB</th><th>Nama</th><th>Hadiah</th><th>Status</th><th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelKandidat"></tbody>
+        </table>
+        <div class="action-bar">
+            <button onclick="approveAll()">Sahkan Semua</button>
+            <button class="danger" onclick="resetUndian()">Reset Undian</button>
+        </div>
+    </section>
+
+    <!-- LAPORAN -->
+    <section class="card">
+        <h2>Laporan Pemenang</h2>
+        <button onclick="exportCSV()">Export CSV</button>
+        <button onclick="exportPDF()">Export PDF</button>
+        <table>
+            <thead>
+                <tr><th>BIB</th><th>Nama</th><th>Hadiah</th></tr>
+            </thead>
+            <tbody id="tabelLaporan"></tbody>
+        </table>
+    </section>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
