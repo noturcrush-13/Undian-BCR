@@ -375,3 +375,58 @@ button:disabled {
     transform: scale(0.97);
 }
 
+.cek-result {
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cek-result .success {
+    color: #16a34a;
+    background: #ecfdf5;
+    padding: 14px;
+    border-radius: 12px;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    color: #22c55e;
+    font-weight: 900;
+    margin-bottom: 20px;
+}
+
+.sidebar button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #f8fafc;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.sidebar button:hover {
+    background: #22c55e;
+    color: #fff;
+}
+
+.content {
+    flex: 1;
+    padding: 30px;
+}
+
+.page.hidden {
+    display: none;
+}

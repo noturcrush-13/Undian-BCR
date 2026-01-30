@@ -37,6 +37,37 @@ let kandidat = load("kandidat");
 renderAll();
 
 /* ======================================================
+   Slicing Page
+====================================================== */
+const ADMIN_PASSWORD = "bcr2026";
+let isFirstLoad = true;
+
+function navigate(page, needAuth = false) {
+
+    // 🔐 SELALU MINTA PASSWORD JIKA ADMIN PAGE
+    if (needAuth) {
+        const pass = prompt("Masukkan password admin:");
+        if (pass !== ADMIN_PASSWORD) {
+            alert("Password salah");
+            return; // ⛔ TIDAK PINDAH HALAMAN
+        }
+    }
+
+    // 🔄 PINDAH HALAMAN
+    document.querySelectorAll(".page")
+        .forEach(p => p.classList.add("hidden"));
+
+    document
+        .getElementById(`page-${page}`)
+        ?.classList.remove("hidden");
+}
+
+
+// default halaman
+navigate("cek");
+
+
+/* ======================================================
    WORKER RESPONSE
 ====================================================== */
 worker.onmessage = (e) => {
@@ -333,7 +364,14 @@ function renderAll() {
         }
     });
 
-    /* ================= FILTER VALUE ================= */
+    /* 🔥 RESET JUMLAH PEMENANG SETIAP HADIAH BERUBAH */
+    jumlahPemenang.value = 1;
+    const selectedIndex = selectHadiah.value;
+    if (selectedIndex !== "") {
+        jumlahPemenang.max = hadiah[selectedIndex].stock;
+    }
+
+    /* ================= FILTER VALUE (KHUSUS LAPORAN) ================= */
     const filterPrize =
         document.getElementById("filterHadiah")?.value || "";
 
@@ -345,28 +383,31 @@ function renderAll() {
     /* ================= VERIFIKASI (PENDING ONLY) ================= */
     tabelKandidat.innerHTML = "";
 
-    kandidat
-        .filter(k => k.status === "PENDING") // ⬅️ KUNCI UTAMA
-        .forEach((k, i) => {
-            const aksi = `
-                <div class="action-buttons">
-                    <button class="btn-action approve" onclick="approve(${i})">
-                        Approve
-                    </button>
-                    <button class="btn-action reject" onclick="reject(${i})">
-                        Reject
-                    </button>
-                </div>
-            `;
-            tabelKandidat.innerHTML += `
-                <tr>
-                    <td>${k.bib}</td>
-                    <td>${k.nama}</td>
-                    <td>${k.prize}</td>
-                    <td>${k.status}</td>
-                    <td>${aksi}</td>
-                </tr>`;
-        });
+    kandidat.forEach((k, indexAsli) => {
+        if (k.status !== "PENDING") return;
+
+        const aksi = `
+            <div class="action-buttons">
+                <button class="btn-action approve"
+                        onclick="approve(${indexAsli})">
+                    Approve
+                </button>
+                <button class="btn-action reject"
+                        onclick="reject(${indexAsli})">
+                    Reject
+                </button>
+            </div>
+        `;
+
+        tabelKandidat.innerHTML += `
+            <tr>
+                <td>${k.bib}</td>
+                <td>${k.nama}</td>
+                <td>${k.prize}</td>
+                <td>${k.status}</td>
+                <td>${aksi}</td>
+            </tr>`;
+    });
 
     /* ================= LAPORAN PEMENANG ================= */
     tabelLaporan.innerHTML = "";
@@ -390,9 +431,11 @@ function renderAll() {
                 </tr>`;
         });
 
-    renderFilterHadiah();   // ⛔ aman karena dijaga
+    renderFilterHadiah();
     renderStatusHadiah();
 }
+
+
 
 /* ======================================================
    Render Bulk Batch
@@ -628,16 +671,82 @@ function enableUndiButton() {
 ====================================================== */
 function renderFilterHadiah() {
     const select = document.getElementById("filterHadiah");
-    if (!select || select.options.length > 1) return; // ⛔ penting
+    if (!select) return;
 
-    const prizes = [...new Set(kandidat.map(k => k.prize))];
+    const currentValue = select.value; // simpan pilihan user
 
-    prizes.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.innerText = p;
-        select.appendChild(opt);
+    // Ambil HADIAH DARI DATA APPROVED SAAT INI
+    const prizeSet = new Set(
+        kandidat
+            .filter(k => k.status === "APPROVED")
+            .map(k => k.prize)
+    );
+
+    select.innerHTML = `<option value="">Semua Hadiah</option>`;
+
+    [...prizeSet].forEach(prize => {
+        select.innerHTML += `
+            <option value="${prize}">${prize}</option>
+        `;
+    });
+
+    // restore selection jika masih valid
+    if ([...prizeSet].includes(currentValue)) {
+        select.value = currentValue;
+    } else {
+        select.value = "";
+    }
+}
+
+// ================= EVENT: GANTI HADIAH =================
+if (window.selectHadiah && window.jumlahPemenang) {
+    selectHadiah.addEventListener("change", () => {
+        // reset jumlah ke default
+        jumlahPemenang.value = 1;
+
+        const idx = selectHadiah.value;
+        if (idx !== "") {
+            jumlahPemenang.max = hadiah[idx].stock;
+        }
     });
 }
 
+// ================= CEK UNDIAN (PUBLIK) =================
+function cekUndian() {
+    const bib = document
+        .getElementById("cekBibInput")
+        .value
+        .trim();
 
+    const resultEl = document.getElementById("cekResult");
+    resultEl.innerHTML = "";
+
+    if (!bib) {
+        resultEl.innerText = "Silakan masukkan nomor BIB.";
+        return;
+    }
+
+    const pesertaAda = peserta.some(p => p.bib === bib)
+        || kandidat.some(k => k.bib === bib);
+
+    if (!pesertaAda) {
+        resultEl.innerText =
+            "Nomor BIB tidak ditemukan, pastikan penulisan sudah benar.";
+        return;
+    }
+
+    const menang = kandidat.find(
+        k => k.bib === bib && k.status === "APPROVED"
+    );
+
+    if (menang) {
+        resultEl.innerHTML = `
+            <div class="success">
+                🎉 Selamat! Anda memenangkan <b>${menang.prize}</b>
+            </div>
+        `;
+    } else {
+        resultEl.innerText =
+            "Mohon maaf, Anda belum beruntung atau nomor belum diundi.";
+    }
+}

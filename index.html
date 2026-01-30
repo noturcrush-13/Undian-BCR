@@ -12,112 +12,189 @@
     <p>Event Lucky Draw System</p>
 </header>
 
-<div class="container">
+<div class="app">
 
-    <!-- SETUP -->
-    <section class="card">
-        <h2>Setup Data</h2>
-        <div class="grid-2">
-            <div>
-                <label>Upload Peserta (Excel)</label>
-                <input type="file" id="filePeserta" accept=".xlsx">
-                <button onclick="uploadPeserta()">Upload Peserta</button>
-                <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
-                <p>Total Peserta: <b id="totalPeserta">0</b></p>
-            </div>
-            <div>
-                <label>Upload Hadiah (Excel)</label>
-                <input type="file" id="fileHadiah" accept=".xlsx">
-                <button onclick="uploadHadiah()">Upload Hadiah</button>
-                <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
-            </div>
-        </div>
-    </section>
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+        <h2>BCR Menu</h2>
 
-    <!-- ================= STATUS HADIAH ================= -->
-    <section class="card">
-        <h2>🎁 Status Hadiah</h2>
+        <button onclick="navigate('manajemen', true)">
+            📂 Manajemen Data
+        </button>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Hadiah</th>
-                    <th>Jumlah Tersedia</th>
-                </tr>
-            </thead>
-            <tbody id="tabelStatusHadiah"></tbody>
-        </table>
-    </section>
+        <button onclick="navigate('undian', true)">
+            🎰 Undian
+        </button>
 
+        <button onclick="navigate('cek')">
+            🔍 Cek Undian
+        </button>
+    </aside>
 
-    <!-- GACHA -->
-    <section class="card gacha">
-        <h2 id="currentPrize">🎁 Hadiah</h2>
+    <!-- ================= CONTENT ================= -->
+    <main class="content">
 
-        <select id="selectHadiah" onchange="onHadiahChange()"></select>
-        <input type="number" id="jumlahPemenang" value="1" min="1">
+        <!-- ======================================================
+             PAGE 1 : MANAJEMEN DATA (ADMIN - PASSWORD)
+        ======================================================= -->
+        <section id="page-manajemen" class="page hidden">
 
-        <div class="gacha-display">
-            <span id="gachaNumber">-----</span>
-        </div>
-        <div class="gacha-result-list" id="gachaResultList"></div>
+            <!-- SETUP -->
+            <section class="card">
+                <h2>Setup Data</h2>
+                <div class="grid-2">
+                    <div>
+                        <label>Upload Peserta (Excel)</label>
+                        <input type="file" id="filePeserta" accept=".xlsx">
+                        <button onclick="uploadPeserta()">Upload Peserta</button>
+                        <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
+                        <p>Total Peserta: <b id="totalPeserta">0</b></p>
+                    </div>
 
-        <button class="primary" id="btnUndi" onclick="startUndian()">UNDI SEKARANG</button>
-    </section>
+                    <div>
+                        <label>Upload Hadiah (Excel)</label>
+                        <input type="file" id="fileHadiah" accept=".xlsx">
+                        <button onclick="uploadHadiah()">Upload Hadiah</button>
+                        <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- VERIFIKASI -->
-    <section class="card">
-        <h2>Verifikasi Pemenang</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>BIB</th><th>Nama</th><th>Hadiah</th><th>Status</th><th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tabelKandidat"></tbody>
-        </table>
-        <div class="action-bar">
-            <button class="btn-action-lg approve-all" onclick="approveAll()">
-                Sahkan Semua
-            </button>
-            <button class="btn-action-lg reset-all" onclick="resetUndian()">
-                Reset Undian
-            </button>
-        </div>
-    </section>
+            <!-- STATUS HADIAH -->
+            <section class="card">
+                <h2>🎁 Status Hadiah</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hadiah</th>
+                            <th>Jumlah Tersedia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelStatusHadiah"></tbody>
+                </table>
+            </section>
 
-    <!-- LAPORAN -->
-    <section class="card">
-        <h2>Laporan Pemenang</h2>
-        <div class="filter-bar">
-            <select id="filterHadiah" onchange="renderAll()">
-                <option value="">Semua Hadiah</option>
-            </select>
+        </section>
 
-            <input
-                type="text"
-                id="searchBib"
-                placeholder="Cari No BIB..."
-                oninput="renderAll()"
-            />
-        </div>
-        <table>
-            <thead>
-                <tr><th>BIB</th><th>Nama</th><th>Hadiah</th></tr>
-            </thead>
-            <tbody id="tabelLaporan"></tbody>
-        </table>
-        <div class="export-actions">
-            <button class="btn-export csv" onclick="exportCSV()">Export CSV</button>
-            <button class="btn-export pdf" onclick="exportPDF()">Export PDF</button>
-        </div>
-    </section>
+        <!-- ======================================================
+             PAGE 2 : UNDIAN (ADMIN - PASSWORD)
+        ======================================================= -->
+        <section id="page-undian" class="page hidden">
 
+            <!-- GACHA -->
+            <section class="card gacha">
+                <h2 id="currentPrize">🎁 Hadiah</h2>
+
+                <select id="selectHadiah"></select>
+                <input type="number" id="jumlahPemenang" value="1" min="1">
+
+                <div class="gacha-display">
+                    <span id="gachaNumber">-----</span>
+                </div>
+
+                <div class="gacha-result-list" id="gachaResultList"></div>
+
+                <button class="primary" id="btnUndi" onclick="startUndian()">
+                    UNDI SEKARANG
+                </button>
+            </section>
+
+            <!-- VERIFIKASI -->
+            <section class="card">
+                <h2>Verifikasi Pemenang</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>BIB</th>
+                            <th>Nama</th>
+                            <th>Hadiah</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelKandidat"></tbody>
+                </table>
+
+                <div class="action-bar">
+                    <button class="btn-action-lg approve-all" onclick="approveAll()">
+                        Sahkan Semua
+                    </button>
+                    <button class="btn-action-lg reset-all" onclick="resetUndian()">
+                        Reset Undian
+                    </button>
+                </div>
+            </section>
+
+            <!-- LAPORAN -->
+            <section class="card">
+                <h2>Laporan Pemenang</h2>
+
+                <div class="filter-bar">
+                    <select id="filterHadiah" onchange="renderAll()">
+                        <option value="">Semua Hadiah</option>
+                    </select>
+
+                    <input
+                        type="text"
+                        id="searchBib"
+                        placeholder="Cari No BIB..."
+                        oninput="renderAll()"
+                    />
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>BIB</th>
+                            <th>Nama</th>
+                            <th>Hadiah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelLaporan"></tbody>
+                </table>
+
+                <div class="export-actions">
+                    <button class="btn-export csv" onclick="exportCSV()">Export CSV</button>
+                    <button class="btn-export pdf" onclick="exportPDF()">Export PDF</button>
+                </div>
+            </section>
+
+        </section>
+
+        <!-- ======================================================
+             PAGE 3 : CEK UNDIAN (PUBLIK)
+        ======================================================= -->
+        <section id="page-cek" class="page">
+
+            <section class="card">
+                <h2>🔍 Cek Hasil Undian</h2>
+
+                <input
+                    type="text"
+                    id="cekBibInput"
+                    placeholder="Masukkan Nomor BIB"
+                />
+
+                <button class="primary" onclick="cekUndian()">
+                    Cek Undian
+                </button>
+
+                <div id="cekResult" class="cek-result"></div>
+            </section>
+
+        </section>
+
+    </main>
 </div>
 
+<!-- ================= LIBRARY ================= -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
+
+<!-- ================= APP ================= -->
 <script src="app.js"></script>
+
 </body>
 </html>
