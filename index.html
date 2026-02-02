@@ -34,33 +34,11 @@
     <!-- ================= CONTENT ================= -->
     <main class="content">
 
-        <!-- ======================================================
-             PAGE 1 : MANAJEMEN DATA (ADMIN - PASSWORD)
-        ======================================================= -->
+        <!-- ================= PAGE : MANAJEMEN ================= -->
         <section id="page-manajemen" class="page hidden">
 
-            <!-- SETUP -->
-            <section class="card">
-                <h2>Setup Data</h2>
-                <div class="grid-2">
-                    <div>
-                        <label>Upload Peserta (Excel)</label>
-                        <input type="file" id="filePeserta" accept=".xlsx">
-                        <button onclick="uploadPeserta()">Upload Peserta</button>
-                        <button class="danger" onclick="resetPeserta()">Reset Peserta</button>
-                        <p>Total Peserta: <b id="totalPeserta">0</b></p>
-                    </div>
+            <p>Total Peserta: <b id="totalPeserta">0</b></p>
 
-                    <div>
-                        <label>Upload Hadiah (Excel)</label>
-                        <input type="file" id="fileHadiah" accept=".xlsx">
-                        <button onclick="uploadHadiah()">Upload Hadiah</button>
-                        <button class="danger" onclick="resetHadiah()">Reset Hadiah</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STATUS HADIAH -->
             <section class="card">
                 <h2>🎁 Status Hadiah</h2>
                 <table>
@@ -76,12 +54,9 @@
 
         </section>
 
-        <!-- ======================================================
-             PAGE 2 : UNDIAN (ADMIN - PASSWORD)
-        ======================================================= -->
+        <!-- ================= PAGE : UNDIAN ================= -->
         <section id="page-undian" class="page hidden">
 
-            <!-- GACHA -->
             <section class="card gacha">
                 <h2 id="currentPrize">🎁 Hadiah</h2>
 
@@ -99,10 +74,8 @@
                 </button>
             </section>
 
-            <!-- VERIFIKASI -->
             <section class="card">
                 <h2>Verifikasi Pemenang</h2>
-
                 <table>
                     <thead>
                         <tr>
@@ -126,7 +99,6 @@
                 </div>
             </section>
 
-            <!-- LAPORAN -->
             <section class="card">
                 <h2>Laporan Pemenang</h2>
 
@@ -162,9 +134,7 @@
 
         </section>
 
-        <!-- ======================================================
-             PAGE 3 : CEK UNDIAN (PUBLIK)
-        ======================================================= -->
+        <!-- ================= PAGE : CEK UNDIAN ================= -->
         <section id="page-cek" class="page">
 
             <section class="card">
@@ -188,12 +158,8 @@
     </main>
 </div>
 
-<!-- ================= LIBRARY ================= -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
-
-<!-- ================= APP ================= -->
 <script src="app.js"></script>
 
 </body>
