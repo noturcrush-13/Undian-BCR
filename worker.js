@@ -52,7 +52,7 @@ self.onmessage = (e) => {
         const pending = kandidat.filter(k => k.status === "PENDING");
         if (!pending.length) return;
 
-        const prize = pending[0].prize;
+        const {prize} = pending[0];
         const h = hadiah.find(x => x.prize === prize);
         if (!h || h.stock < pending.length) return;
 

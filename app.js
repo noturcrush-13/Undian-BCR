@@ -2,7 +2,7 @@
    CONFIG
 ====================================================== */
 const SPREADSHEET_API_URL =
-  "https://script.google.com/macros/s/AKfycbyjovIwCqxInw45UzhAikAIjjgF7QKsG9KJ9yjIP0WB5G3UsS1HQD4xgFOKeNpEjnXw/exec";
+  "https://script.google.com/macros/s/AKfycbzmuxiS44kmQEaJ2atefQxUtVeA8J3i5TAV4ho4FGKT6SUrY0muVEQqUFc2RDD7iQW5/exec";
 
 const ADMIN_PASSWORD = "bcr2026";
 
@@ -36,7 +36,7 @@ let gachaInterval = null;
 let gachaStartTime = 0;
 let currentAnimationDuration = 1500;
 const BULK_BATCH_SIZE = 5;
-
+const BULK_BATCH_DELAY = 900;
 /* ======================================================
    WORKER
 ====================================================== */
@@ -45,25 +45,107 @@ const worker = new Worker("./worker.js");
 /* ======================================================
    NAVIGATION
 ====================================================== */
-function navigate(page, needAuth = false) {
-  if (needAuth) {
-    const pass = prompt("Masukkan password admin:");
-    if (pass !== ADMIN_PASSWORD) {
-      alert("Password salah");
-      return;
-    }
-  }
+let pendingPage = null;
 
+function navigate(page, needAuth = false) {
+    console.group("NAVIGATE");
+    console.log("navigate() dipanggil");
+    console.log("page:", page);
+    console.log("needAuth:", needAuth);
+
+    if (needAuth) {
+        console.log("Butuh auth → buka modal");
+        pendingPage = page;
+        openPasswordModal();
+        console.groupEnd();
+        return;
+    }
+
+    showPage(page);
+    console.groupEnd();
+}
+
+function showPage(page) {
+    console.group("SHOW PAGE");
+
+    console.log("Target page:", page);
+
+    const pages = document.querySelectorAll(".page");
+    console.log("Jumlah .page ditemukan:", pages.length);
+
+    pages.forEach(p => {
+        console.log("Hide:", p.id);
+        p.classList.add("hidden");
+    });
+
+    const targetId = `page-${page}`;
+    const target = document.getElementById(targetId);
+
+    console.log("Cari element:", targetId);
+    console.log("Element ditemukan?", !!target);
+
+    if (!target) {
+        console.error("❌ ELEMENT TIDAK ADA:", targetId);
+        console.groupEnd();
+        return;
+    }
+
+    target.classList.remove("hidden");
+    console.log("✅ SHOW:", targetId);
+    console.log("Class sekarang:", target.className);
+
+    console.groupEnd();
+}
+
+/* ================= PASSWORD MODAL ================= */
+
+function openPasswordModal() {
+    const modal = document.getElementById("passwordModal");
+    const input = document.getElementById("adminPasswordInput");
+
+    if (!modal || !input) {
+        console.error("❌ Password modal / input tidak ditemukan di DOM");
+        return;
+    }
+
+    input.value = "";
+    modal.classList.remove("hidden");
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById("passwordModal");
+    if (modal) modal.classList.add("hidden");
+}
+
+function confirmPassword() {
+    const input = document.getElementById("adminPasswordInput");
+    if (!input) return;
+
+    if (input.value !== ADMIN_PASSWORD) {
+        alert("Password salah");
+        input.value = "";
+        return;
+    }
+
+    closePasswordModal();
+    showPage(pendingPage);
+    pendingPage = null;
+}
+
+function showPage(page) {
   document.querySelectorAll(".page")
     .forEach(p => p.classList.add("hidden"));
 
-  document.getElementById(`page-${page}`)?.classList.remove("hidden");
+  const target = document.getElementById(`page-${page}`);
+  if (target) target.classList.remove("hidden");
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   navigate("cek");
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    showPage("cek"); // halaman publik default
+});
 /* ======================================================
    INIT (READ FROM SPREADSHEET)
 ====================================================== */
@@ -141,31 +223,50 @@ worker.onmessage = (e) => {
     Math.max(0, currentAnimationDuration - (Date.now() - gachaStartTime));
 
   setTimeout(() => {
-    stopGachaAnimation();
-    document.querySelector(".gacha-display")?.classList.remove("running");
-
+    // COMMIT STATE
     peserta = newPeserta;
     kandidat.push(...baru);
 
-    // TAMPILKAN
+    /* ================= SINGLE ================= */
     if (baru.length === 1) {
-      gachaNumber.innerText = `${baru[0].bib} - ${baru[0].nama}`;
-    } else {
-      renderBulkResult(baru);
-    }
+      // 🛑 STOP SEKARANG
+      stopGachaAnimation();
+      document.querySelector(".gacha-display")?.classList.remove("running");
 
-    // SIMPAN KE SHEET (GET ONLY)
-    baru.forEach(k => {
+      const p = baru[0];
+      gachaNumber.innerText = `${p.bib} - ${p.nama}`;
+
       fetch(
         `${SPREADSHEET_API_URL}?action=addPemenang`
-        + `&bib=${encodeURIComponent(k.bib)}`
-        + `&nama=${encodeURIComponent(k.nama)}`
-        + `&hadiah=${encodeURIComponent(k.prize)}`
+        + `&bib=${encodeURIComponent(p.bib)}`
+        + `&nama=${encodeURIComponent(p.nama)}`
+        + `&hadiah=${encodeURIComponent(p.prize)}`
       );
+
+      enableUndiButton();
+      renderAll();
+      return;
+    }
+
+    /* ================= BULK ================= */
+
+    // ⚠️ JANGAN STOP ANIMASI DI SINI
+
+    // SIMPAN BULK SEKALI
+    fetch(
+      `${SPREADSHEET_API_URL}?action=addPemenangBulk`
+      + `&data=${encodeURIComponent(JSON.stringify(baru))}`
+    );
+
+    // TAMPILKAN PER BATCH
+    renderBulkPerBatch(baru, () => {
+      // 🛑 STOP SETELAH BATCH TERAKHIR
+      stopGachaAnimation();
+      document.querySelector(".gacha-display")?.classList.remove("running");
+      enableUndiButton();
+      renderAll();
     });
-    console.log(baru)
-    enableUndiButton();
-    renderAll();
+
   }, delay);
 };
 
@@ -203,53 +304,114 @@ function renderBulkResult(list) {
   });
 }
 
+function renderBulkPerBatch(list, onComplete) {
+  gachaResultList.innerHTML = "";
+
+  let index = 0;
+
+  function nextBatch() {
+    const batch = list.slice(index, index + BULK_BATCH_SIZE);
+
+    batch.forEach(k => {
+      const div = document.createElement("div");
+      div.className = "bib-item";
+      div.innerHTML = `
+        <div class="bib">${k.bib}</div>
+        <div class="nama">${k.nama}</div>
+      `;
+      gachaResultList.appendChild(div);
+    });
+
+    index += BULK_BATCH_SIZE;
+
+    if (index < list.length) {
+      setTimeout(nextBatch, BULK_BATCH_DELAY);
+    } else if (typeof onComplete === "function") {
+        onComplete();
+      }
+  }
+  nextBatch();
+}
+
 /* ======================================================
    VERIFIKASI
 ====================================================== */
-function approve(i) {
-  const k = kandidat[i];
+function approve(bib) {
+  const k = kandidat.find(x => String(x.bib) === String(bib));
+  if (!k) return alert("Data pemenang tidak ditemukan");
+
   const h = hadiah.find(x => x.prize === k.prize);
   if (!h || h.stock <= 0) return alert("Stock habis");
 
-  fetch(`${SPREADSHEET_API_URL}?action=approve&bib=${encodeURIComponent(k.bib)}`)
-    .then(() => {
+  fetch(`${SPREADSHEET_API_URL}?action=approveSingle&bib=${encodeURIComponent(bib)}`)
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success) {
+        alert("Gagal approve");
+        return;
+      }
+
       k.status = "APPROVED";
       h.stock--;
       renderAll();
-    });
+    })
+    .catch(() => alert("Gagal koneksi API"));
 }
 
-function reject(i) {
-  if (!confirm("Peserta hangus, lanjutkan?")) return;
+function reject(bib) {
+  if (!confirm("Peserta akan dihanguskan. Lanjutkan?")) return;
 
-  fetch(`${SPREADSHEET_API_URL}?action=reject&bib=${encodeURIComponent(kandidat[i].bib)}`)
+  const k = kandidat.find(x => String(x.bib) === String(bib));
+  if (!k) return alert("Data tidak ditemukan");
+
+  fetch(`${SPREADSHEET_API_URL}?action=reject&bib=${encodeURIComponent(bib)}`)
     .then(() => {
-      kandidat[i].status = "REJECTED";
+      k.status = "REJECTED";
       renderAll();
     });
 }
 
 function approveAll() {
   const pending = kandidat.filter(k => k.status === "PENDING");
-  if (!pending.length) return alert("Tidak ada pending");
+  if (!pending.length) {
+    alert("Tidak ada pending");
+    return;
+  }
 
   const prize = pending[0].prize;
-  if (pending.some(k => k.prize !== prize))
-    return alert("Hadiah berbeda");
+  if (pending.some(k => k.prize !== prize)) {
+    alert("Approve semua hanya boleh untuk hadiah yang sama");
+    return;
+  }
 
   const h = hadiah.find(x => x.prize === prize);
-  if (!h || h.stock < pending.length)
-    return alert("Stock tidak cukup");
+  if (!h || h.stock < pending.length) {
+    alert("Stock hadiah tidak cukup");
+    return;
+  }
 
-  pending.forEach(k => {
-    fetch(
-      `${SPREADSHEET_API_URL}?action=approve&bib=${encodeURIComponent(k.bib)}`
-    );
-    k.status = "APPROVED";
-  });
+  const bibList = pending.map(k => k.bib).join(",");
 
-  h.stock -= pending.length;
-  renderAll();
+  disableApproveAllButton();
+
+  fetch(
+    `${SPREADSHEET_API_URL}?action=approveAll&bib=${encodeURIComponent(bibList)}`
+  )
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success) {
+        alert("Gagal approve semua");
+        return;
+      }
+
+      // update LOCAL STATE
+      pending.forEach(k => k.status = "APPROVED");
+      h.stock -= pending.length;
+
+      renderAll();
+    })
+    .catch(() => alert("Gagal koneksi API"))
+    .finally(enableApproveAllButton);
 }
 
 /* ======================================================
@@ -265,6 +427,7 @@ function resetUndian() {
    RENDER
 ====================================================== */
 function renderAll() {
+  
   totalPeserta.innerText = peserta.length;
 
   selectHadiah.innerHTML = "";
@@ -280,16 +443,19 @@ function renderAll() {
   kandidat
     .filter(k => k.status === "PENDING")
     .forEach((k, i) => {
+      const aksi =  `
+        <div class="action-buttons">
+          <button class="btn-action approve" onclick="approve(${k.bib})">Approve</button>
+          <button class="btn-action reject" onclick="reject(${k.bib})">Reject</button>
+        </div>
+      `
       tabelKandidat.innerHTML += `
         <tr>
           <td>${k.bib}</td>
           <td>${k.nama}</td>
           <td>${k.prize}</td>
           <td>${k.status}</td>
-          <td>
-            <button onclick="approve(${i})">Approve</button>
-            <button class="danger" onclick="reject(${i})">Reject</button>
-          </td>
+          <td>${aksi}</td>
         </tr>`;
     });
 
@@ -350,3 +516,24 @@ function enableUndiButton() {
   btnUndi.disabled = false;
   btnUndi.innerText = "UNDI SEKARANG";
 }
+
+function disableApproveAllButton() {
+  const btn = document.querySelector(".approve-all");
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.dataset.originalText = btn.innerText;
+  btn.innerText = "Memproses...";
+  btn.classList.add("disabled");
+}
+
+function enableApproveAllButton() {
+  const btn = document.querySelector(".approve-all");
+  if (!btn) return;
+
+  btn.disabled = false;
+  btn.innerText = btn.dataset.originalText || "Sahkan Semua";
+  btn.classList.remove("disabled");
+}
+
+
