@@ -2,7 +2,7 @@
    CONFIG
 ====================================================== */
 const SPREADSHEET_API_URL =
-  "https://script.google.com/macros/s/AKfycbzmuxiS44kmQEaJ2atefQxUtVeA8J3i5TAV4ho4FGKT6SUrY0muVEQqUFc2RDD7iQW5/exec";
+  "https://script.google.com/macros/s/AKfycbwAD3tTgP8VGK19Y5PrMf_vqfGY5XHYKkXP03JzJLFD5Hfy5WFeh508HrZUNe1nmhuY/exec";
 
 const ADMIN_PASSWORD = "bcr2026";
 
@@ -47,23 +47,35 @@ const worker = new Worker("./worker.js");
 ====================================================== */
 let pendingPage = null;
 
+// function navigate(page, needAuth = false) {
+//     console.group("NAVIGATE");
+//     console.log("navigate() dipanggil");
+//     console.log("page:", page);
+//     console.log("needAuth:", needAuth);
+
+//     if (needAuth) {
+//         console.log("Butuh auth → buka modal");
+//         pendingPage = page;
+//         openPasswordModal();
+//         console.groupEnd();
+//         return;
+//     }
+
+//     showPage(page);
+//     console.groupEnd();
+// }
 function navigate(page, needAuth = false) {
-    console.group("NAVIGATE");
-    console.log("navigate() dipanggil");
-    console.log("page:", page);
-    console.log("needAuth:", needAuth);
+  console.log("navigate →", page, "needAuth:", needAuth);
 
-    if (needAuth) {
-        console.log("Butuh auth → buka modal");
-        pendingPage = page;
-        openPasswordModal();
-        console.groupEnd();
-        return;
-    }
+  if (needAuth) {
+    pendingPage = page;
+    openPasswordModal();
+    return;
+  }
 
-    showPage(page);
-    console.groupEnd();
+  showPage(page);
 }
+
 
 function showPage(page) {
     console.group("SHOW PAGE");
@@ -118,18 +130,29 @@ function closePasswordModal() {
 }
 
 function confirmPassword() {
-    const input = document.getElementById("adminPasswordInput");
-    if (!input) return;
+  const input = document.getElementById("adminPasswordInput");
 
-    if (input.value !== ADMIN_PASSWORD) {
-        alert("Password salah");
-        input.value = "";
-        return;
-    }
+  if (!input) {
+    console.error("Input password tidak ditemukan");
+    return;
+  }
 
-    closePasswordModal();
-    showPage(pendingPage);
-    pendingPage = null;
+  if (input.value !== ADMIN_PASSWORD) {
+    alert("Password salah");
+    input.value = "";
+    return;
+  }
+
+  closePasswordModal();
+
+  if (!pendingPage) {
+    console.warn("pendingPage kosong");
+    return;
+  }
+
+  console.log("Password OK → buka page:", pendingPage);
+  showPage(pendingPage);
+  pendingPage = null;
 }
 
 function showPage(page) {
@@ -364,7 +387,7 @@ function reject(bib) {
   const k = kandidat.find(x => String(x.bib) === String(bib));
   if (!k) return alert("Data tidak ditemukan");
 
-  fetch(`${SPREADSHEET_API_URL}?action=reject&bib=${encodeURIComponent(bib)}`)
+  fetch(`${SPREADSHEET_API_URL}?action=rejectSingle&bib=${encodeURIComponent(bib)}`)
     .then(() => {
       k.status = "REJECTED";
       renderAll();
@@ -378,7 +401,7 @@ function approveAll() {
     return;
   }
 
-  const prize = pending[0].prize;
+  const {prize} = pending[0];
   if (pending.some(k => k.prize !== prize)) {
     alert("Approve semua hanya boleh untuk hadiah yang sama");
     return;
@@ -494,7 +517,57 @@ function cekUndian() {
 
   fetch(`${SPREADSHEET_API_URL}?action=cekUndian&bib=${encodeURIComponent(bib)}`)
     .then(r => r.json())
-    .then(res => cekResult.innerText = res.message);
+    .then(res => {
+      const box   = document.getElementById("cekResult");
+      const card  = box.querySelector(".cek-card");
+      const icon  = box.querySelector(".cek-icon");
+      const title = box.querySelector(".cek-title");
+      const msg   = box.querySelector(".cek-message");
+
+      // reset
+      card.className = "cek-card";
+
+      if (res.status === "win") {
+        card.classList.add("win");
+        icon.innerText  = "🎉";
+        title.innerText = "SELAMAT!";
+        msg.innerText   = res.message;
+
+      } else if (res.status === "not_win") {
+        card.classList.add("lose");
+        icon.innerText  = "🙂";
+        title.innerText = "BELUM BERUNTUNG";
+        msg.innerText   = res.message;
+
+      } else if (res.status === "not_found") {
+        card.classList.add("notfound");
+        icon.innerText  = "❌";
+        title.innerText = "DATA TIDAK DITEMUKAN";
+        msg.innerText   = res.message;
+
+      } else {
+        card.classList.add("notfound");
+        icon.innerText  = "⚠️";
+        title.innerText = "TERJADI KESALAHAN";
+        msg.innerText   = "Silakan coba beberapa saat lagi";
+      }
+
+      box.classList.remove("hidden");
+    })
+    .catch(() => {
+      const box   = document.getElementById("cekResult");
+      const card  = box.querySelector(".cek-card");
+      const icon  = box.querySelector(".cek-icon");
+      const title = box.querySelector(".cek-title");
+      const msg   = box.querySelector(".cek-message");
+
+      card.className = "cek-card notfound";
+      icon.innerText  = "⚠️";
+      title.innerText = "KONEKSI GAGAL";
+      msg.innerText   = "Tidak dapat terhubung ke server";
+
+      box.classList.remove("hidden");
+    });
 }
 
 /* ======================================================
@@ -535,5 +608,3 @@ function enableApproveAllButton() {
   btn.innerText = btn.dataset.originalText || "Sahkan Semua";
   btn.classList.remove("disabled");
 }
-
-

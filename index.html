@@ -50,6 +50,9 @@
                     </thead>
                     <tbody id="tabelStatusHadiah"></tbody>
                 </table>
+                <button class="btn-action-lg reset-all" onclick="resetUndian()">
+                        Reset Undian
+                </button>
             </section>
 
         </section>
@@ -94,9 +97,6 @@
                 <div class="action-bar">
                     <button class="btn-action-lg approve-all" onclick="approveAll()">
                         Sahkan Semua
-                    </button>
-                    <button class="btn-action-lg reset-all" onclick="resetUndian()">
-                        Reset Undian
                     </button>
                 </div>
             </section>
@@ -153,7 +153,13 @@
                     Cek Undian
                 </button>
 
-                <div id="cekResult" class="cek-result"></div>
+                <div id="cekResult" class="cek-result hidden">
+                    <div class="cek-card">
+                        <div class="cek-icon"></div>
+                        <div class="cek-title"></div>
+                        <div class="cek-message"></div>
+                    </div>
+                </div>
             </section>
 
         </section>
@@ -162,8 +168,8 @@
 </div>
 
 <!-- ================= PASSWORD MODAL ================= -->
-<div id="passwordModal" class="modal hidden">
-  <div class="modal-content">
+<div id="passwordModal" class="password-modal hidden">
+  <div class="password-box">
     <h3>🔐 Password Admin</h3>
 
     <input
