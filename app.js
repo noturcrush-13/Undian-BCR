@@ -2,7 +2,7 @@
    CONFIG
 ====================================================== */
 const SPREADSHEET_API_URL =
-  "https://script.google.com/macros/s/AKfycbwAD3tTgP8VGK19Y5PrMf_vqfGY5XHYKkXP03JzJLFD5Hfy5WFeh508HrZUNe1nmhuY/exec";
+  "https://script.google.com/macros/s/AKfycbzGTSZUEMB5l8q_la9coW6laj6vpdpIod3yqZIX0sdmJOJ4D7JIZxudrlhHpCdYfeWk/exec";
 
 const ADMIN_PASSWORD = "bcr2026";
 
@@ -181,7 +181,8 @@ async function init() {
     initialHadiah = hadiah.map(h => ({
       prize: h.prize,
       stock: h.stock,
-      initialStock: h.initialStock
+      initialStock: h.initialStock, 
+      durasiMs: parseDurasi(h.durasi)
     }));
 
     renderAll();
@@ -212,11 +213,14 @@ function startUndian() {
     return alert("Pilih hadiah");
   }
 
-  if (jumlah > hadiah[hadiahIndex].stock) {
+  const hadiahTerpilih = hadiah[hadiahIndex];
+
+  if (jumlah > hadiahTerpilih.stock) {
     enableUndiButton();
     return alert("Stock tidak cukup");
   }
 
+  // RESET UI
   gachaNumber.innerText = "-----";
   gachaResultList.innerHTML = "";
   document.querySelector(".gacha-display")?.classList.add("running");
@@ -225,14 +229,36 @@ function startUndian() {
 
   requestAnimationFrame(() => {
     gachaStartTime = Date.now();
-    currentAnimationDuration = getAnimationDuration(jumlah);
+
+    // 🔥 INI KUNCINYA
+    currentAnimationDuration =
+      getHadiahDurationMs(hadiahTerpilih, jumlah);
+
     startGachaAnimation();
 
     worker.postMessage({
       type: "UNDI",
-      payload: { peserta, hadiah, hadiahIndex, jumlah }
+      payload: {
+        peserta,
+        hadiah,
+        hadiahIndex,
+        jumlah
+      }
     });
   });
+}
+
+function getHadiahDurationMs(hadiahObj, jumlah) {
+  // kalau ada durasi dari spreadsheet (angka detik)
+  if (hadiahObj && hadiahObj.durasi) {
+    const d = Number(hadiahObj.durasi);
+    if (!isNaN(d) && d > 0) {
+      return d * 1000; // detik → ms
+    }
+  }
+
+  // fallback ke logic lama
+  return getAnimationDuration(jumlah);
 }
 
 /* ======================================================
@@ -288,6 +314,7 @@ worker.onmessage = (e) => {
       document.querySelector(".gacha-display")?.classList.remove("running");
       enableUndiButton();
       renderAll();
+      gachaNumber.innerText = "- - - - -"
     });
 
   }, delay);
@@ -607,4 +634,11 @@ function enableApproveAllButton() {
   btn.disabled = false;
   btn.innerText = btn.dataset.originalText || "Sahkan Semua";
   btn.classList.remove("disabled");
+}
+
+function parseDurasi(val) {
+  if (!val) return null;
+
+  const m = String(val).match(/\d+/);
+  return m ? Number(m[0]) * 1000 : null;
 }
